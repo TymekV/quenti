@@ -1,20 +1,45 @@
 # Stage 1: Dependencies
-FROM oven/bun:1.0.2-alpine AS deps
+FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
 # Install node for compatibility
 RUN apk add --no-cache nodejs
 
-# Copy package files
+# Copy workspace configuration
 COPY package.json bun.lockb ./
-COPY packages/*/package.json ./packages/
-COPY apps/*/package.json ./apps/
+COPY turbo.json ./
+COPY tsconfig.base.json ./
+
+# Copy all package.json files to set up workspace structure
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/branding/package.json ./packages/branding/
+COPY packages/components/package.json ./packages/components/
+COPY packages/console/package.json ./packages/console/
+COPY packages/core/package.json ./packages/core/
+COPY packages/cortex/package.json ./packages/cortex/
+COPY packages/drizzle/package.json ./packages/drizzle/
+COPY packages/emails/package.json ./packages/emails/
+COPY packages/enterprise/package.json ./packages/enterprise/
+COPY packages/env/package.json ./packages/env/
+COPY packages/images/package.json ./packages/images/
+COPY packages/inngest/package.json ./packages/inngest/
+COPY packages/integrations/package.json ./packages/integrations/
+COPY packages/interfaces/package.json ./packages/interfaces/
+COPY packages/lib/package.json ./packages/lib/
+COPY packages/payments/package.json ./packages/payments/
+COPY packages/prisma/package.json ./packages/prisma/
+COPY packages/trpc/package.json ./packages/trpc/
+COPY packages/types/package.json ./packages/types/
+
+COPY apps/next/package.json ./apps/next/
+COPY apps/cdn/package.json ./apps/cdn/
+COPY apps/website/package.json ./apps/website/
 
 # Install dependencies
 RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
-FROM oven/bun:1.0.2-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
 # Install node and other dependencies
@@ -22,24 +47,30 @@ RUN apk add --no-cache nodejs openssl
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY --from=deps /app/apps ./apps
 
-# Copy source code
-COPY . .
+# Copy workspace files
+COPY turbo.json ./
+COPY tsconfig.base.json ./
+COPY package.json bun.lockb ./
+
+# Copy all packages
+COPY packages ./packages
+
+# Copy apps
+COPY apps ./apps
 
 # Set environment variables for build
 ENV SKIP_ENV_VALIDATION=true
 ENV NODE_ENV=production
 
 # Generate Prisma client
-RUN cd packages/prisma && bun run prisma generate
+RUN cd packages/prisma && bunx prisma generate
 
-# Build the application
+# Build the application (only the Next.js app)
 RUN bun run build
 
 # Stage 3: Runner
-FROM oven/bun:1.0.2-alpine AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 # Install node and other runtime dependencies
@@ -53,7 +84,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
-COPY --from=builder /app/next.config.mjs ./
+COPY --from=builder /app/apps/next/next.config.mjs ./apps/next/
+COPY --from=builder /app/apps/next/instrumentation.ts ./apps/next/
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/bun.lockb ./
 
