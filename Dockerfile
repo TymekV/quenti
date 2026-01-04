@@ -2,9 +2,6 @@
 FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
-# Install node for compatibility
-RUN apk add --no-cache nodejs
-
 # Copy workspace configuration
 COPY package.json bun.lockb ./
 COPY turbo.json ./
@@ -14,7 +11,6 @@ COPY tsconfig.base.json ./
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/branding/package.json ./packages/branding/
 COPY packages/components/package.json ./packages/components/
-COPY packages/console/package.json ./packages/console/
 COPY packages/core/package.json ./packages/core/
 COPY packages/cortex/package.json ./packages/cortex/
 COPY packages/drizzle/package.json ./packages/drizzle/
@@ -23,7 +19,6 @@ COPY packages/enterprise/package.json ./packages/enterprise/
 COPY packages/env/package.json ./packages/env/
 COPY packages/images/package.json ./packages/images/
 COPY packages/inngest/package.json ./packages/inngest/
-COPY packages/integrations/package.json ./packages/integrations/
 COPY packages/interfaces/package.json ./packages/interfaces/
 COPY packages/lib/package.json ./packages/lib/
 COPY packages/payments/package.json ./packages/payments/
@@ -33,7 +28,6 @@ COPY packages/types/package.json ./packages/types/
 
 COPY apps/next/package.json ./apps/next/
 COPY apps/cdn/package.json ./apps/cdn/
-COPY apps/website/package.json ./apps/website/
 
 # Install dependencies
 RUN bun install --frozen-lockfile
@@ -42,8 +36,8 @@ RUN bun install --frozen-lockfile
 FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
-# Install node and other dependencies
-RUN apk add --no-cache nodejs openssl
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -73,8 +67,8 @@ RUN bun run build
 FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
-# Install node and other runtime dependencies
-RUN apk add --no-cache nodejs openssl
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
 ENV PORT=3000
