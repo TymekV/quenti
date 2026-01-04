@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+bun.lockb
+
+# Git
+.git
+.gitignore
+
+# Development files
+.env
+.env*.local
+.editorconfig
+.vscode
+.devcontainer
+
+# Build artifacts
+.next
+.turbo
+out
+dist
+build
+*.tsbuildinfo
+
+# Testing
+coverage
+.react-email
+
+# Misc
+.DS_Store
+*.pem
+README.md
+LICENSE
+.prettierignore
+.eslintignore
+
+# CI/CD
+.github
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
