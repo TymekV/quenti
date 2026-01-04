@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # PostgreSQL database
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quenti}
+      POSTGRES_USER: ${POSTGRES_USER:-quenti}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quenti}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quenti-network
+
+  # Quenti application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-quenti}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-quenti}
+      DIRECT_URL: postgresql://${POSTGRES_USER:-quenti}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-quenti}
+      
+      # Next Auth - REQUIRED: Set these in your .env file
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      
+      # Quenti encryption key - REQUIRED: Set in your .env file
+      QUENTI_ENCRYPTION_KEY: ${QUENTI_ENCRYPTION_KEY}
+      
+      # Google OAuth - REQUIRED: Set in your .env file
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      
+      # Email (optional)
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_SENDER: ${EMAIL_SENDER:-}
+      USE_RESEND_PREVIEWS: ${USE_RESEND_PREVIEWS:-true}
+      
+      # Development options
+      BYPASS_ORG_DOMAIN_BLACKLIST: ${BYPASS_ORG_DOMAIN_BLACKLIST:-true}
+      
+      # Metrics
+      METRICS_API_USER: ${METRICS_API_USER:-localhost}
+      METRICS_API_PASSWORD: ${METRICS_API_PASSWORD:-CHANGE_ME_IN_PRODUCTION}
+      
+      # Public URLs
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      
+      # Inngest
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-local}
+      
+      # Node environment
+      NODE_ENV: production
+      PORT: 3000
+    networks:
+      - quenti-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  quenti-network:
+    driver: bridge
