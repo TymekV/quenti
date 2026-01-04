@@ -145,14 +145,15 @@ docker-compose exec db psql -U quenti -d quenti
 
 For production deployments:
 
-1. **Use strong passwords**: Change all default passwords in `.env`
-2. **Use HTTPS**: Set up a reverse proxy (nginx, traefik, etc.) with SSL/TLS
-3. **Update URLs**: Set `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` to your production domain
-4. **Secure the database**: Don't expose PostgreSQL port publicly (remove port mapping)
-5. **Set up backups**: Implement automated database backups
-6. **Configure email**: Set up Resend API for email functionality
-7. **Monitor resources**: Ensure adequate CPU and memory resources
-8. **Use Docker secrets**: Consider using Docker secrets for sensitive data
+1. **⚠️ CRITICAL: Change all placeholder values**: All values starting with `CHANGE_ME_` in your `.env` file MUST be replaced with actual secure values
+2. **Use strong passwords**: Generate secure passwords for `POSTGRES_PASSWORD` and `METRICS_API_PASSWORD`
+3. **Use HTTPS**: Set up a reverse proxy (nginx, traefik, etc.) with SSL/TLS
+4. **Update URLs**: Set `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` to your production domain
+5. **Secure the database**: Don't expose PostgreSQL port publicly (remove port mapping)
+6. **Set up backups**: Implement automated database backups
+7. **Configure email**: Set up Resend API for email functionality
+8. **Monitor resources**: Ensure adequate CPU and memory resources
+9. **Use Docker secrets**: Consider using Docker secrets for sensitive data
 
 ### Example nginx reverse proxy config
 
