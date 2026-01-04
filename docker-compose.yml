@@ -58,7 +58,7 @@ services:
       
       # Metrics
       METRICS_API_USER: ${METRICS_API_USER:-localhost}
-      METRICS_API_PASSWORD: ${METRICS_API_PASSWORD:-password}
+      METRICS_API_PASSWORD: ${METRICS_API_PASSWORD:-CHANGE_ME_IN_PRODUCTION}
       
       # Public URLs
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
